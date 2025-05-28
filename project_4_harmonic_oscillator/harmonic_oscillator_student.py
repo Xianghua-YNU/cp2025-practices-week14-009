@@ -80,8 +80,16 @@ def solve_ode(ode_func: Callable, initial_state: np.ndarray, t_span: Tuple[float
         Tuple[np.ndarray, np.ndarray]: (时间点数组, 状态数组)
     """
     # TODO: 实现ODE求解器
-    raise NotImplementedError("请实现ODE求解器")
-
+    t_start, t_end = t_span
+    t = np.arange(t_start, t_end + dt, dt)
+    num_steps = len(t)
+    states = np.zeros((num_steps, len(initial_state)))
+    states[0] = initial_state
+    
+    for i in range(num_steps-1):
+        states[i+1] = rk4_step(ode_func, states[i], t[i], dt, **kwargs)
+    
+    return t, states
 def plot_time_evolution(t: np.ndarray, states: np.ndarray, title: str) -> None:
     """
     绘制状态随时间的演化。
@@ -92,8 +100,13 @@ def plot_time_evolution(t: np.ndarray, states: np.ndarray, title: str) -> None:
         title: str, 图标题
     """
     # TODO: 实现时间演化图的绘制
-    raise NotImplementedError("请实现时间演化图的绘制")
-
+    plt.figure(figsize=(10, 6))
+    plt.plot(t, states[:, 0])
+    plt.xlabel('Time (s)')
+    plt.ylabel('Displacement (m)')
+    plt.title(title)
+    plt.grid(True)
+    plt.show()
 def plot_phase_space(states: np.ndarray, title: str) -> None:
     """
     绘制相空间轨迹。
