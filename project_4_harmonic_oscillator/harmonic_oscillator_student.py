@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple, Callable, List
-
+from scipy.signal import find_peaks
 def harmonic_oscillator_ode(state: np.ndarray, t: float, omega: float = 1.0) -> np.ndarray:
     """
     简谐振子的一阶微分方程组。
@@ -18,7 +18,9 @@ def harmonic_oscillator_ode(state: np.ndarray, t: float, omega: float = 1.0) -> 
     # TODO: 实现简谐振子的微分方程组
     # dx/dt = v
     # dv/dt = -omega^2 * x
-    raise NotImplementedError("请实现简谐振子的微分方程组")
+    dxdt = v
+    dvdt = -omega**2 * x
+    return np.array([dxdt, dvdt])
 
 def anharmonic_oscillator_ode(state: np.ndarray, t: float, omega: float = 1.0) -> np.ndarray:
     """
