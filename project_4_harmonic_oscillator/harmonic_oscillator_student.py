@@ -38,7 +38,10 @@ def anharmonic_oscillator_ode(state: np.ndarray, t: float, omega: float = 1.0) -
     # TODO: 实现非谐振子的微分方程组
     # dx/dt = v
     # dv/dt = -omega^2 * x^3
-    raise NotImplementedError("请实现非谐振子的微分方程组")
+    dxdt = v
+    dvdt = -omega**2 * x**3  # 非线性项改为x^3
+    return np.array([dxdt, dvdt])
+
 
 def rk4_step(ode_func: Callable, state: np.ndarray, t: float, dt: float, **kwargs) -> np.ndarray:
     """
