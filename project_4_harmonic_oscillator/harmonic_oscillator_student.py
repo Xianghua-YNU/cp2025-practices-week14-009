@@ -58,7 +58,11 @@ def rk4_step(ode_func: Callable, state: np.ndarray, t: float, dt: float, **kwarg
         np.ndarray: 下一步的状态
     """
     # TODO: 实现RK4方法
-    raise NotImplementedError("请实现RK4方法")
+    k1 = ode_func(state, t, **kwargs)
+    k2 = ode_func(state + k1*dt/2, t + dt/2, **kwargs)
+    k3 = ode_func(state + k2*dt/2, t + dt/2, **kwargs)
+    k4 = ode_func(state + k3*dt, t + dt, **kwargs)
+    return state + (k1 + 2*k2 + 2*k3 + k4) * dt / 6
 
 def solve_ode(ode_func: Callable, initial_state: np.ndarray, t_span: Tuple[float, float], 
               dt: float, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
