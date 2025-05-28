@@ -80,7 +80,7 @@ def compare_initial_conditions(ic1, ic2, t_span=(0, 50), dt=0.01):
     比较不同初始条件的解
     """
     # TODO: 实现初始条件比较 (约10行代码)
-    # 求解两个初始条件的解
+   # 求解两个初始条件的解
     t1, y1 = solve_lorenz_equations(x0=ic1[0], y0=ic1[1], z0=ic1[2], t_span=t_span, dt=dt)
     t2, y2 = solve_lorenz_equations(x0=ic2[0], y0=ic2[1], z0=ic2[2], t_span=t_span, dt=dt)
     
