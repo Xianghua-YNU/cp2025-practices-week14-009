@@ -10,12 +10,11 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.integrate import solve_ivp
 
 
-def lorenz_system(t, state, sigma, r, b):
+def lorenz_system(state, sigma, r, b):
     """
     定义洛伦兹系统方程
     
     参数:
-        t: 时间 (未使用但solve_ivp需要)
         state: 当前状态向量 [x, y, z]
         sigma, r, b: 系统参数
         
@@ -27,6 +26,12 @@ def lorenz_system(t, state, sigma, r, b):
     dydt = r * x - y - x * z
     dzdt = x * y - b * z
     return np.array([dxdt, dydt, dzdt])
+
+def lorenz_system_for_solve_ivp(t, state, sigma, r, b):
+    """
+    为solve_ivp适配的洛伦兹系统方程
+    """
+    return lorenz_system(state, sigma, r, b)
 
 def solve_lorenz_equations(sigma=10.0, r=28.0, b=8/3,
                           x0=0.1, y0=0.1, z0=0.1,
@@ -45,7 +50,7 @@ def solve_lorenz_equations(sigma=10.0, r=28.0, b=8/3,
     t_eval = np.linspace(t_span[0], t_span[1], int((t_span[1]-t_span[0])/dt))
     
     # 求解微分方程
-    sol = solve_ivp(lorenz_system, 
+    sol = solve_ivp(lorenz_system_for_solve_ivp, 
                     t_span=t_span, 
                     y0=initial_state,
                     t_eval=t_eval, 
