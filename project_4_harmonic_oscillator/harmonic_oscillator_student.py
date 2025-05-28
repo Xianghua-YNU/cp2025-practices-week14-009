@@ -137,7 +137,16 @@ def analyze_period(t: np.ndarray, states: np.ndarray) -> float:
         float: 估计的振动周期
     """
     # TODO: 实现周期分析
-    raise NotImplementedError("请实现周期分析")
+    # 寻找位移峰值点
+    peaks, _ = find_peaks(np.abs(states[:, 0]), height=0.5*np.max(states[:, 0]))
+    
+    if len(peaks) < 2:
+        return np.nan
+    
+    # 计算相邻峰值的时间差
+    periods = np.diff(t[peaks])
+    return np.mean(periods)
+
 
 def main():
     # 设置参数
@@ -149,18 +158,69 @@ def main():
     # 1. 设置初始条件 x(0)=1, v(0)=0
     # 2. 求解方程
     # 3. 绘制时间演化图
+    initial_state = np.array([1.0, 0.0])  # x=1, v=0
+    t_harmonic, states_harmonic = solve_ode(harmonic_oscillator_ode, initial_state, t_span, dt, omega=omega)
+     # 绘制时间演化
+    plot_time_evolution(t_harmonic, states_harmonic, "Harmonic Oscillator Time Evolution")
     
+    # 绘制相空间
+    plot_phase_space(states_harmonic, "Harmonic Oscillator Phase Space")
+    
+    # 计算周期
+    period_harmonic = analyze_period(t_harmonic, states_harmonic)
+    print(f"Harmonic Oscillator Period: {period_harmonic:.3f} s")
+
+
     # TODO: 任务2 - 振幅对周期的影响分析
     # 1. 使用不同的初始振幅
     # 2. 分析周期变化
+    amplitudes = [0.5, 1.0, 2.0, 3.0]
+    harmonic_periods = []
     
+    for amp in amplitudes:
+        t, states = solve_ode(harmonic_oscillator_ode, [amp, 0.0], t_span, dt, omega=omega)
+        period = analyze_period(t, states)
+        harmonic_periods.append(period)
+        print(f"Amplitude: {amp} m -> Period: {period:.3f} s")
+
+
     # TODO: 任务3 - 非谐振子的数值分析
     # 1. 求解非谐振子方程
     # 2. 分析不同振幅的影响
+    initial_state = np.array([1.0, 0.0])  # x=1, v=0
+    t_anharmonic, states_anharmonic = solve_ode(anharmonic_oscillator_ode, initial_state, t_span, dt, omega=omega)
     
+    # 绘制时间演化
+    plot_time_evolution(t_anharmonic, states_anharmonic, "Anharmonic Oscillator Time Evolution")
+    
+    # 绘制相空间
+    plot_phase_space(states_anharmonic, "Anharmonic Oscillator Phase Space")
+    
+    # 计算周期
+    period_anharmonic = analyze_period(t_anharmonic, states_anharmonic)
+    print(f"Anharmonic Oscillator Period: {period_anharmonic:.3f} s")
     # TODO: 任务4 - 相空间分析
     # 1. 绘制相空间轨迹
     # 2. 比较简谐和非谐振子
+    anharmonic_periods = []
+    
+    for amp in amplitudes:
+        t, states = solve_ode(anharmonic_oscillator_ode, [amp, 0.0], t_span, dt, omega=omega)
+        period = analyze_period(t, states)
+        anharmonic_periods.append(period)
+        print(f"Amplitude: {amp} m -> Period: {period:.3f} s")
 
+    # =================================================================
+    # 绘制周期对比图
+    # =================================================================
+    plt.figure(figsize=(10, 6))
+    plt.plot(amplitudes, harmonic_periods, 'o-', label='Harmonic')
+    plt.plot(amplitudes, anharmonic_periods, 's-', label='Anharmonic')
+    plt.xlabel('Initial Amplitude (m)')
+    plt.ylabel('Period (s)')
+    plt.title('Period vs Amplitude Comparison')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 if __name__ == "__main__":
     main()
