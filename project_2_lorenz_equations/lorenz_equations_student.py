@@ -10,18 +10,18 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.integrate import solve_ivp
 
 
-def lorenz_system(state, sigma, r, b):
+def lorenz_system(t, state, sigma, r, b):
     """
     定义洛伦兹系统方程
     
     参数:
+        t: 时间 (未使用但solve_ivp需要)
         state: 当前状态向量 [x, y, z]
         sigma, r, b: 系统参数
         
     返回:
         导数向量 [dx/dt, dy/dt, dz/dt]
     """
-    # TODO: 实现洛伦兹系统方程 (约3行代码)
     x, y, z = state
     dxdt = sigma * (y - x)
     dydt = r * x - y - x * z
@@ -38,7 +38,6 @@ def solve_lorenz_equations(sigma=10.0, r=28.0, b=8/3,
         t: 时间点数组
         y: 解数组，形状为(3, n_points)
     """
-    # TODO: 使用solve_ivp求解洛伦兹方程 (约3行代码)
     # 设置初始状态
     initial_state = np.array([x0, y0, z0])
     
@@ -59,7 +58,6 @@ def plot_lorenz_attractor(t: np.ndarray, y: np.ndarray):
     """
     绘制洛伦兹吸引子3D图
     """
-    # TODO: 实现3D绘图 (约6行代码)
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
     
@@ -79,8 +77,7 @@ def compare_initial_conditions(ic1, ic2, t_span=(0, 50), dt=0.01):
     """
     比较不同初始条件的解
     """
-    # TODO: 实现初始条件比较 (约10行代码)
-   # 求解两个初始条件的解
+    # 求解两个初始条件的解
     t1, y1 = solve_lorenz_equations(x0=ic1[0], y0=ic1[1], z0=ic1[2], t_span=t_span, dt=dt)
     t2, y2 = solve_lorenz_equations(x0=ic2[0], y0=ic2[1], z0=ic2[2], t_span=t_span, dt=dt)
     
