@@ -46,11 +46,12 @@ def solve_lorenz_equations(sigma=10.0, r=28.0, b=8/3,
     t_eval = np.linspace(t_span[0], t_span[1], int((t_span[1]-t_span[0])/dt))
     
     # 求解微分方程
-    sol = solve_ivp(fun=lambda t, y: lorenz_system(t, y, sigma, r, b), 
+    sol = solve_ivp(lorenz_system, 
                     t_span=t_span, 
                     y0=initial_state,
                     t_eval=t_eval, 
-                    method='RK45')
+                    method='RK45',
+                    args=(sigma, r, b))
     
     return sol.t, sol.y
                               
@@ -65,7 +66,7 @@ def plot_lorenz_attractor(t: np.ndarray, y: np.ndarray):
     # 绘制3D轨迹
     ax.plot(y[0], y[1], y[2], lw=0.5, color='blue')
     
-    # 设置标签（英文）
+    # 设置标签
     ax.set_xlabel('X Axis')
     ax.set_ylabel('Y Axis')
     ax.set_zlabel('Z Axis')
