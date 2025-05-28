@@ -3,9 +3,9 @@
 """
 项目1：Lotka-Volterra捕食者-猎物模型 - 学生代码模板
 
-学生姓名：[请填写您的姓名]
-学号：[请填写您的学号]
-完成日期：[请填写完成日期]
+学生姓名：[余维]
+学号：[20231050005]
+完成日期：[2025/5/28]
 """
 
 import numpy as np
@@ -42,7 +42,10 @@ def lotka_volterra_system(state: np.ndarray, t: float, alpha: float, beta: float
     # TODO: 实现Lotka-Volterra方程组 (约2-3行代码)
     # 提示：根据上面的方程组计算 dx/dt 和 dy/dt
     # [STUDENT_CODE_HERE]
-    raise NotImplementedError("请在 lotka_volterra_system 函数中实现方程组")
+    x, y = state
+    # 修正dxdt的计算，确保符号正确
+    dxdt = alpha * x - beta * x * y  # 当x=y=1, alpha=1, beta=0.5时，dxdt = 1 - 0.5 = 0.5
+    dydt = gamma * x * y - delta * y  # 当x=y=1, gamma=0.5, delta=2时，dydt = 0.5 - 2 = -1.5
     
     return np.array([dxdt, dydt])
 
@@ -75,7 +78,7 @@ def euler_method(f, y0: np.ndarray, t_span: Tuple[float, float],
     # 提示：y_{n+1} = y_n + dt * f(y_n, t_n)
     # [STUDENT_CODE_HERE]
     for i in range(n_steps - 1):
-        raise NotImplementedError("请在 euler_method 函数中实现欧拉法迭代")
+        y[i+1] = y[i] + dt * f(y[i], t[i], *args)
     
     return t, y
 
@@ -111,7 +114,14 @@ def improved_euler_method(f, y0: np.ndarray, t_span: Tuple[float, float],
     # y_{n+1} = y_n + (k1 + k2) / 2
     # [STUDENT_CODE_HERE]
     for i in range(n_steps - 1):
-        raise NotImplementedError("请在 improved_euler_method 函数中实现改进欧拉法")
+        h = dt
+        yi = y[i]
+        ti = t[i]
+        
+        k1 = h * f(yi, ti, *args)
+        k2 = h * f(yi + k1, ti + h, *args)
+        
+        y[i+1] = yi + (k1 + k2) / 2
     
     return t, y
 
@@ -149,7 +159,16 @@ def runge_kutta_4(f, y0: np.ndarray, t_span: Tuple[float, float],
     # y_{n+1} = y_n + (k1 + 2*k2 + 2*k3 + k4) / 6
     # [STUDENT_CODE_HERE]
     for i in range(n_steps - 1):
-        raise NotImplementedError("请在 runge_kutta_4 函数中实现4阶龙格-库塔法")
+        h = dt
+        yi = y[i]
+        ti = t[i]
+        
+        k1 = h * f(yi, ti, *args)
+        k2 = h * f(yi + k1/2, ti + h/2, *args)
+        k3 = h * f(yi + k2/2, ti + h/2, *args)
+        k4 = h * f(yi + k3, ti + h, *args)
+        
+        y[i+1] = yi + (k1 + 2*k2 + 2*k3 + k4) / 6
     
     return t, y
 
@@ -181,7 +200,12 @@ def solve_lotka_volterra(alpha: float, beta: float, gamma: float, delta: float,
     # 2. 调用runge_kutta_4函数
     # 3. 从解中提取x和y分量
     # [STUDENT_CODE_HERE]
-    raise NotImplementedError("请在 solve_lotka_volterra 函数中实现求解逻辑")
+    y0_vec = np.array([x0, y0])
+    t, solution = runge_kutta_4(lotka_volterra_system, y0_vec, t_span, dt, 
+                               alpha, beta, gamma, delta)
+    
+    x = solution[:, 0]
+    y = solution[:, 1]
     
     return t, x, y
 
@@ -212,9 +236,23 @@ def compare_methods(alpha: float, beta: float, gamma: float, delta: float,
     # 2. 分别调用三种方法
     # 3. 构造并返回结果字典
     # [STUDENT_CODE_HERE]
-    raise NotImplementedError("请在 compare_methods 函数中实现方法比较")
+    y0_vec = np.array([x0, y0])
+    args = (alpha, beta, gamma, delta)
     
-    return results
+    # 欧拉法
+    t_euler, sol_euler = euler_method(lotka_volterra_system, y0_vec, t_span, dt, *args)
+    
+    # 改进欧拉法
+    t_ie, sol_ie = improved_euler_method(lotka_volterra_system, y0_vec, t_span, dt, *args)
+    
+    # 4阶龙格-库塔法
+    t_rk4, sol_rk4 = runge_kutta_4(lotka_volterra_system, y0_vec, t_span, dt, *args)
+    
+    return {
+        'euler': {'t': t_euler, 'x': sol_euler[:, 0], 'y': sol_euler[:, 1]},
+        'improved_euler': {'t': t_ie, 'x': sol_ie[:, 0], 'y': sol_ie[:, 1]},
+        'rk4': {'t': t_rk4, 'x': sol_rk4[:, 0], 'y': sol_rk4[:, 1]}
+    }
 
 
 def plot_population_dynamics(t: np.ndarray, x: np.ndarray, y: np.ndarray, 
@@ -233,8 +271,31 @@ def plot_population_dynamics(t: np.ndarray, x: np.ndarray, y: np.ndarray,
     # 子图2：相空间轨迹图（y vs x）
     # 提示：使用plt.subplot(1, 2, 1)和plt.subplot(1, 2, 2)
     # [STUDENT_CODE_HERE]
-    raise NotImplementedError("请在 plot_population_dynamics 函数中实现绘图功能")
-
+    plt.figure(figsize=(12, 5))
+    
+    # 时间序列图
+    plt.subplot(1, 2, 1)
+    plt.plot(t, x, 'b-', label='Prey (x)', linewidth=2)
+    plt.plot(t, y, 'r-', label='Predator (y)', linewidth=2)
+    plt.xlabel('Time t')
+    plt.ylabel('Population')
+    plt.title('Population vs Time')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    # 相空间轨迹图
+    plt.subplot(1, 2, 2)
+    plt.plot(x, y, 'g-', linewidth=2)
+    plt.plot(x[0], y[0], 'go', markersize=8, label='Start')
+    plt.xlabel('Prey Population (x)')
+    plt.ylabel('Predator Population (y)')
+    plt.title('Phase Space Trajectory')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    plt.suptitle(title)
+    plt.tight_layout()
+    plt.show()
 
 def plot_method_comparison(results: dict) -> None:
     """
@@ -249,7 +310,42 @@ def plot_method_comparison(results: dict) -> None:
     # 2. 上排：三种方法的时间序列图
     # 3. 下排：三种方法的相空间图
     # [STUDENT_CODE_HERE]
-    raise NotImplementedError("请在 plot_method_comparison 函数中实现比较图绘制")
+    plt.figure(figsize=(15, 10))
+    
+    methods = ['euler', 'improved_euler', 'rk4']
+    method_names = ['Euler Method', 'Improved Euler', '4th-order Runge-Kutta']
+    colors = ['blue', 'orange', 'green']
+    
+    # 时间序列比较
+    for i, (method, name, color) in enumerate(zip(methods, method_names, colors)):
+        plt.subplot(2, 3, i+1)
+        t = results[method]['t']
+        x = results[method]['x']
+        y = results[method]['y']
+        
+        plt.plot(t, x, color=color, linestyle='-', label='Prey', linewidth=2)
+        plt.plot(t, y, color=color, linestyle='--', label='Predator', linewidth=2)
+        plt.xlabel('Time t')
+        plt.ylabel('Population')
+        plt.title(f'{name} - Time Series')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+    
+    # 相空间比较
+    for i, (method, name, color) in enumerate(zip(methods, method_names, colors)):
+        plt.subplot(2, 3, i+4)
+        x = results[method]['x']
+        y = results[method]['y']
+        
+        plt.plot(x, y, color=color, linewidth=2)
+        plt.plot(x[0], y[0], 'o', color=color, markersize=6)
+        plt.xlabel('Prey Population (x)')
+        plt.ylabel('Predator Population (y)')
+        plt.title(f'{name} - Phase Space')
+        plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show()
 
 
 def analyze_parameters() -> None:
@@ -267,7 +363,65 @@ def analyze_parameters() -> None:
     # 3. 计算并验证守恒量
     # 4. 绘制分析结果
     # [STUDENT_CODE_HERE]
-    raise NotImplementedError("请在 analyze_parameters 函数中实现参数分析")
+    # 基本参数
+    alpha, beta, gamma, delta = 1.0, 0.5, 0.5, 2.0
+    t_span = (0, 30)
+    dt = 0.01
+    
+    plt.figure(figsize=(15, 10))
+    
+    # 不同初始条件的影响
+    initial_conditions = [(1, 1), (2, 2), (3, 1), (1, 3)]
+    
+    for i, (x0, y0) in enumerate(initial_conditions):
+        t, x, y = solve_lotka_volterra(alpha, beta, gamma, delta, x0, y0, t_span, dt)
+        
+        plt.subplot(2, 2, 1)
+        plt.plot(t, x, label=f'x0={x0}, y0={y0}', linewidth=2)
+        
+        plt.subplot(2, 2, 2)
+        plt.plot(t, y, label=f'x0={x0}, y0={y0}', linewidth=2)
+        
+        plt.subplot(2, 2, 3)
+        plt.plot(x, y, label=f'x0={x0}, y0={y0}', linewidth=2)
+    
+    plt.subplot(2, 2, 1)
+    plt.xlabel('Time t')
+    plt.ylabel('Prey Population (x)')
+    plt.title('Prey Population under Different Initial Conditions')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    plt.subplot(2, 2, 2)
+    plt.xlabel('Time t')
+    plt.ylabel('Predator Population (y)')
+    plt.title('Predator Population under Different Initial Conditions')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    plt.subplot(2, 2, 3)
+    plt.xlabel('Prey Population (x)')
+    plt.ylabel('Predator Population (y)')
+    plt.title('Phase Space Trajectories for Different Initial Conditions')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    # 能量守恒检验
+    x0, y0 = 2, 2
+    t, x, y = solve_lotka_volterra(alpha, beta, gamma, delta, x0, y0, t_span, dt)
+    
+    # Lotka-Volterra系统的守恒量：H = gamma*x + beta*y - delta*ln(x) - alpha*ln(y)
+    H = gamma * x + beta * y - delta * np.log(x) - alpha * np.log(y)
+    
+    plt.subplot(2, 2, 4)
+    plt.plot(t, H, 'purple', linewidth=2)
+    plt.xlabel('Time t')
+    plt.ylabel('Conserved Quantity H')
+    plt.title('Energy Conservation Test')
+    plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show()
 
 
 def main():
