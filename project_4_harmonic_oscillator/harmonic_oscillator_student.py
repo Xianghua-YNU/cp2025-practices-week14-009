@@ -116,7 +116,14 @@ def plot_phase_space(states: np.ndarray, title: str) -> None:
         title: str, 图标题
     """
     # TODO: 实现相空间图的绘制
-    raise NotImplementedError("请实现相空间图的绘制")
+    plt.figure(figsize=(8, 8))
+    plt.plot(states[:, 0], states[:, 1])
+    plt.xlabel('Position (m)')
+    plt.ylabel('Velocity (m/s)')
+    plt.title(title)
+    plt.grid(True)
+    plt.axis('equal')
+    plt.show()
 
 def analyze_period(t: np.ndarray, states: np.ndarray) -> float:
     """
