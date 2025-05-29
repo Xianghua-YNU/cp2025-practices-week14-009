@@ -138,13 +138,17 @@ def analyze_period(t: np.ndarray, states: np.ndarray) -> float:
     """
     # TODO: 实现周期分析
     # 寻找位移峰值点
-    peaks, _ = find_peaks(np.abs(states[:, 0]), height=0.5*np.max(states[:, 0]))
+    x = states[:, 0]
+    peaks = []
+    for i in range(1, len(x)-1):
+        if x[i] > x[i-1] and x[i] > x[i+1]:
+            peaks.append(t[i])
     
     if len(peaks) < 2:
         return np.nan
     
-    # 计算相邻峰值的时间差
-    periods = np.diff(t[peaks])
+    # 计算相邻峰值之间的时间差的平均值
+    periods = np.diff(peaks)
     return np.mean(periods)
 
 
