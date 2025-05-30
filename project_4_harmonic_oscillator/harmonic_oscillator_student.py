@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple, Callable, List
-
+from scipy.signal import find_peaks
 def harmonic_oscillator_ode(state: np.ndarray, t: float, omega: float = 1.0) -> np.ndarray:
     """
     简谐振子的一阶微分方程组。
@@ -18,7 +18,9 @@ def harmonic_oscillator_ode(state: np.ndarray, t: float, omega: float = 1.0) -> 
     # TODO: 实现简谐振子的微分方程组
     # dx/dt = v
     # dv/dt = -omega^2 * x
-    raise NotImplementedError("请实现简谐振子的微分方程组")
+    dxdt = v
+    dvdt = -omega**2 * x
+    return np.array([dxdt, dvdt])
 
 def anharmonic_oscillator_ode(state: np.ndarray, t: float, omega: float = 1.0) -> np.ndarray:
     """
@@ -36,7 +38,10 @@ def anharmonic_oscillator_ode(state: np.ndarray, t: float, omega: float = 1.0) -
     # TODO: 实现非谐振子的微分方程组
     # dx/dt = v
     # dv/dt = -omega^2 * x^3
-    raise NotImplementedError("请实现非谐振子的微分方程组")
+    dxdt = v
+    dvdt = -omega**2 * x**3  # 非线性项改为x^3
+    return np.array([dxdt, dvdt])
+
 
 def rk4_step(ode_func: Callable, state: np.ndarray, t: float, dt: float, **kwargs) -> np.ndarray:
     """
@@ -53,7 +58,11 @@ def rk4_step(ode_func: Callable, state: np.ndarray, t: float, dt: float, **kwarg
         np.ndarray: 下一步的状态
     """
     # TODO: 实现RK4方法
-    raise NotImplementedError("请实现RK4方法")
+    k1 = ode_func(state, t, **kwargs)
+    k2 = ode_func(state + k1*dt/2, t + dt/2, **kwargs)
+    k3 = ode_func(state + k2*dt/2, t + dt/2, **kwargs)
+    k4 = ode_func(state + k3*dt, t + dt, **kwargs)
+    return state + (k1 + 2*k2 + 2*k3 + k4) * dt / 6
 
 def solve_ode(ode_func: Callable, initial_state: np.ndarray, t_span: Tuple[float, float], 
               dt: float, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
@@ -71,8 +80,16 @@ def solve_ode(ode_func: Callable, initial_state: np.ndarray, t_span: Tuple[float
         Tuple[np.ndarray, np.ndarray]: (时间点数组, 状态数组)
     """
     # TODO: 实现ODE求解器
-    raise NotImplementedError("请实现ODE求解器")
-
+    t_start, t_end = t_span
+    t = np.arange(t_start, t_end + dt, dt)
+    num_steps = len(t)
+    states = np.zeros((num_steps, len(initial_state)))
+    states[0] = initial_state
+    
+    for i in range(num_steps-1):
+        states[i+1] = rk4_step(ode_func, states[i], t[i], dt, **kwargs)
+    
+    return t, states
 def plot_time_evolution(t: np.ndarray, states: np.ndarray, title: str) -> None:
     """
     绘制状态随时间的演化。
@@ -83,8 +100,13 @@ def plot_time_evolution(t: np.ndarray, states: np.ndarray, title: str) -> None:
         title: str, 图标题
     """
     # TODO: 实现时间演化图的绘制
-    raise NotImplementedError("请实现时间演化图的绘制")
-
+    plt.figure(figsize=(10, 6))
+    plt.plot(t, states[:, 0])
+    plt.xlabel('Time (s)')
+    plt.ylabel('Displacement (m)')
+    plt.title(title)
+    plt.grid(True)
+    plt.show()
 def plot_phase_space(states: np.ndarray, title: str) -> None:
     """
     绘制相空间轨迹。
@@ -94,7 +116,14 @@ def plot_phase_space(states: np.ndarray, title: str) -> None:
         title: str, 图标题
     """
     # TODO: 实现相空间图的绘制
-    raise NotImplementedError("请实现相空间图的绘制")
+    plt.figure(figsize=(8, 8))
+    plt.plot(states[:, 0], states[:, 1])
+    plt.xlabel('Position (m)')
+    plt.ylabel('Velocity (m/s)')
+    plt.title(title)
+    plt.grid(True)
+    plt.axis('equal')
+    plt.show()
 
 def analyze_period(t: np.ndarray, states: np.ndarray) -> float:
     """
@@ -108,7 +137,20 @@ def analyze_period(t: np.ndarray, states: np.ndarray) -> float:
         float: 估计的振动周期
     """
     # TODO: 实现周期分析
-    raise NotImplementedError("请实现周期分析")
+    # 寻找位移峰值点
+    x = states[:, 0]
+    peaks = []
+    for i in range(1, len(x)-1):
+        if x[i] > x[i-1] and x[i] > x[i+1]:
+            peaks.append(t[i])
+    
+    if len(peaks) < 2:
+        return np.nan
+    
+    # 计算相邻峰值之间的时间差的平均值
+    periods = np.diff(peaks)
+    return np.mean(periods)
+
 
 def main():
     # 设置参数
@@ -120,18 +162,69 @@ def main():
     # 1. 设置初始条件 x(0)=1, v(0)=0
     # 2. 求解方程
     # 3. 绘制时间演化图
+    initial_state = np.array([1.0, 0.0])  # x=1, v=0
+    t_harmonic, states_harmonic = solve_ode(harmonic_oscillator_ode, initial_state, t_span, dt, omega=omega)
+     # 绘制时间演化
+    plot_time_evolution(t_harmonic, states_harmonic, "Harmonic Oscillator Time Evolution")
     
+    # 绘制相空间
+    plot_phase_space(states_harmonic, "Harmonic Oscillator Phase Space")
+    
+    # 计算周期
+    period_harmonic = analyze_period(t_harmonic, states_harmonic)
+    print(f"Harmonic Oscillator Period: {period_harmonic:.3f} s")
+
+
     # TODO: 任务2 - 振幅对周期的影响分析
     # 1. 使用不同的初始振幅
     # 2. 分析周期变化
+    amplitudes = [0.5, 1.0, 2.0, 3.0]
+    harmonic_periods = []
     
+    for amp in amplitudes:
+        t, states = solve_ode(harmonic_oscillator_ode, [amp, 0.0], t_span, dt, omega=omega)
+        period = analyze_period(t, states)
+        harmonic_periods.append(period)
+        print(f"Amplitude: {amp} m -> Period: {period:.3f} s")
+
+
     # TODO: 任务3 - 非谐振子的数值分析
     # 1. 求解非谐振子方程
     # 2. 分析不同振幅的影响
+    initial_state = np.array([1.0, 0.0])  # x=1, v=0
+    t_anharmonic, states_anharmonic = solve_ode(anharmonic_oscillator_ode, initial_state, t_span, dt, omega=omega)
     
+    # 绘制时间演化
+    plot_time_evolution(t_anharmonic, states_anharmonic, "Anharmonic Oscillator Time Evolution")
+    
+    # 绘制相空间
+    plot_phase_space(states_anharmonic, "Anharmonic Oscillator Phase Space")
+    
+    # 计算周期
+    period_anharmonic = analyze_period(t_anharmonic, states_anharmonic)
+    print(f"Anharmonic Oscillator Period: {period_anharmonic:.3f} s")
     # TODO: 任务4 - 相空间分析
     # 1. 绘制相空间轨迹
     # 2. 比较简谐和非谐振子
+    anharmonic_periods = []
+    
+    for amp in amplitudes:
+        t, states = solve_ode(anharmonic_oscillator_ode, [amp, 0.0], t_span, dt, omega=omega)
+        period = analyze_period(t, states)
+        anharmonic_periods.append(period)
+        print(f"Amplitude: {amp} m -> Period: {period:.3f} s")
 
+    # =================================================================
+    # 绘制周期对比图
+    # =================================================================
+    plt.figure(figsize=(10, 6))
+    plt.plot(amplitudes, harmonic_periods, 'o-', label='Harmonic')
+    plt.plot(amplitudes, anharmonic_periods, 's-', label='Anharmonic')
+    plt.xlabel('Initial Amplitude (m)')
+    plt.ylabel('Period (s)')
+    plt.title('Period vs Amplitude Comparison')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 if __name__ == "__main__":
     main()
