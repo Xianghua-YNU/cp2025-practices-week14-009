@@ -164,6 +164,28 @@ def analyze_limit_cycle(states: np.ndarray) -> Tuple[float, float]:
     
     return amplitude, period
 
+
+def plot_energy_evolution(t: np.ndarray, states: np.ndarray, omega: float, title: str) -> None:
+    """
+    绘制能量随时间的变化。
+    
+    参数:
+        t: np.ndarray, 时间点数组
+        states: np.ndarray, 状态数组
+        omega: float, 角频率
+        title: str, 图标题
+    """
+    energy = np.array([calculate_energy(state, omega) for state in states])
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(t, energy, 'm-', linewidth=1.5)
+    plt.xlabel('时间 t')
+    plt.ylabel('能量 E')
+    plt.title(title)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
 def main():
     # 设置基本参数
     mu = 1.0
@@ -175,18 +197,104 @@ def main():
     # TODO: 任务1 - 基本实现
     # 1. 求解van der Pol方程
     # 2. 绘制时间演化图
+    print("任务1：基本实现 (μ=1)")
+    mu = 1.0
+    t_arr, states = solve_ode(van_der_pol_ode, initial_state, t_span, dt, mu=mu, omega=omega)
+    
+    # 绘制时间演化图
+    plot_time_evolution(t_arr, states, f"van der Pol振子时间演化 (μ={mu})")
+    
+    # 绘制相空间轨迹
+    plot_phase_space(states, f"van der Pol振子相空间轨迹 (μ={mu})")
+    
+    # 计算并显示能量
+    plot_energy_evolution(t_arr, states, omega, f"van der Pol振子能量演化 (μ={mu})")
+    
+    # 分析极限环
+    amplitude, period = analyze_limit_cycle(states)
+    print(f"μ={mu}: 振幅={amplitude:.4f}, 周期={period:.4f}")
     
     # TODO: 任务2 - 参数影响分析
     # 1. 尝试不同的mu值
     # 2. 比较和分析结果
+
+    print("\n任务2：参数影响分析")
+    mu_values = [1.0, 2.0, 4.0]
+    colors = ['b', 'g', 'r']
+    
+    plt.figure(figsize=(12, 8))
+    for i, mu in enumerate(mu_values):
+        # 求解ODE
+        t_arr, states = solve_ode(van_der_pol_ode, initial_state, t_span, dt, mu=mu, omega=omega)
+        
+        # 绘制时间演化
+        plt.subplot(2, 1, 1)
+        plt.plot(t_arr, states[:, 0], color=colors[i], label=f'μ={mu}')
+        
+        # 绘制相空间轨迹
+        plt.subplot(2, 1, 2)
+        plt.plot(states[:, 0], states[:, 1], color=colors[i], label=f'μ={mu}')
+        
+        # 分析极限环特性
+        amplitude, period = analyze_limit_cycle(states)
+        print(f"μ={mu}: 振幅={amplitude:.4f}, 周期={period:.4f}")
+    
+    # 设置子图1（时间演化）
+    plt.subplot(2, 1, 1)
+    plt.xlabel('时间 t')
+    plt.ylabel('位置 x')
+    plt.title('不同μ值的van der Pol振子时间演化')
+    plt.grid(True)
+    plt.legend()
+    
+    # 设置子图2（相空间轨迹）
+    plt.subplot(2, 1, 2)
+    plt.xlabel('位置 x')
+    plt.ylabel('速度 v')
+    plt.title('不同μ值的van der Pol振子相空间轨迹')
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
     
     # TODO: 任务3 - 相空间分析
     # 1. 绘制相空间轨迹
     # 2. 分析极限环特征
+
+    print("\n任务3：初始条件影响分析 (μ=4)")
+    mu = 4.0
+    initial_conditions = [
+        np.array([1.0, 0.0]),   # 基准条件
+        np.array([0.1, 0.0]),   # 小振幅
+        np.array([2.0, 0.0]),   # 大振幅
+        np.array([0.0, 1.5])    # 不同相位
+    ]
+    
+    plt.figure(figsize=(10, 8))
+    for i, ic in enumerate(initial_conditions):
+        t_arr, states = solve_ode(van_der_pol_ode, ic, t_span, dt, mu=mu, omega=omega)
+        plt.plot(states[:, 0], states[:, 1], label=f'初始条件: ({ic[0]}, {ic[1]})')
+    
+    plt.xlabel('位置 x')
+    plt.ylabel('速度 v')
+    plt.title(f'不同初始条件下的相空间轨迹 (μ={mu})')
+    plt.grid(True)
+    plt.legend()
+    plt.axis('equal')
+    plt.tight_layout()
+    plt.show()
+    
     
     # TODO: 任务4 - 能量分析
     # 1. 计算和绘制能量随时间的变化
     # 2. 分析能量的耗散和补充
+
+    print("\n任务4：能量分析 (μ=2)")
+    mu = 2.0
+    t_arr, states = solve_ode(van_der_pol_ode, initial_state, t_span, dt, mu=mu, omega=omega)
+    plot_energy_evolution(t_arr, states, omega, f"van der Pol振子能量演化 (μ={mu})")
+
 
 if __name__ == "__main__":
     main()
