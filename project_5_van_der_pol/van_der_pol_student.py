@@ -19,10 +19,9 @@ def van_der_pol_ode(state: np.ndarray, t: float, mu: float = 1.0, omega: float =
     # TODO: 实现van der Pol方程
     # dx/dt = v
     # dv/dt = mu(1-x^2)v - omega^2*x
-    x, v = state
-    dxdt = v
-    dvdt = mu * (1 - x**2) * v - omega**2 * x
-    return np.array([dxdt, dvdt])
+    return np.array([v, mu*(1-x**2)*v - omega**2*x])
+
+
 
 def rk4_step(ode_func: Callable, state: np.ndarray, t: float, dt: float, **kwargs) -> np.ndarray:
     """
@@ -64,17 +63,11 @@ def solve_ode(ode_func: Callable, initial_state: np.ndarray, t_span: Tuple[float
         Tuple[np.ndarray, np.ndarray]: (时间点数组, 状态数组)
     """
     # TODO: 实现ODE求解器
-    t_start, t_end = t_span
-    num_steps = int((t_end - t_start) / dt) + 1
-    t_arr = np.linspace(t_start, t_end, num_steps)
-    states = np.zeros((num_steps, len(initial_state)))
-    states[0] = initial_state
-    
-    for i in range(1, num_steps):
-        states[i] = rk4_step(ode_func, states[i-1], t_arr[i-1], dt, **kwargs)
-    
-    return t_arr, states
-
+    t_eval = np.arange(t_span[0], t_span[1] + dt, dt)
+    sol = solve_ivp(ode_func, t_span, initial_state, 
+                   t_eval=t_eval, args=tuple(kwargs.values()), method='RK45')
+    return sol.t, sol.y.T
+                  
 def plot_time_evolution(t: np.ndarray, states: np.ndarray, title: str) -> None:
     """
     绘制状态随时间的演化。
@@ -86,14 +79,13 @@ def plot_time_evolution(t: np.ndarray, states: np.ndarray, title: str) -> None:
     """
     # TODO: 实现时间演化图的绘制
     plt.figure(figsize=(10, 6))
-    plt.plot(t, states[:, 0], 'b-', label='位置 x')
-    plt.plot(t, states[:, 1], 'r-', label='速度 v')
-    plt.xlabel('时间 t')
-    plt.ylabel('状态')
+    plt.plot(t, states[:, 0], label='Position x(t)')
+    plt.plot(t, states[:, 1], label='Velocity v(t)')
+    plt.xlabel('Time t')
+    plt.ylabel('State Variables')
     plt.title(title)
     plt.grid(True)
     plt.legend()
-    plt.tight_layout()
     plt.show()
 
 def plot_phase_space(states: np.ndarray, title: str) -> None:
