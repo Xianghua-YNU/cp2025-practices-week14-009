@@ -19,7 +19,10 @@ def van_der_pol_ode(state: np.ndarray, t: float, mu: float = 1.0, omega: float =
     # TODO: 实现van der Pol方程
     # dx/dt = v
     # dv/dt = mu(1-x^2)v - omega^2*x
-    raise NotImplementedError("请实现van der Pol方程")
+    x, v = state
+    dxdt = v
+    dvdt = mu * (1 - x**2) * v - omega**2 * x
+    return np.array([dxdt, dvdt])
 
 def rk4_step(ode_func: Callable, state: np.ndarray, t: float, dt: float, **kwargs) -> np.ndarray:
     """
@@ -36,7 +39,14 @@ def rk4_step(ode_func: Callable, state: np.ndarray, t: float, dt: float, **kwarg
         np.ndarray: 下一步的状态
     """
     # TODO: 实现RK4方法
-    raise NotImplementedError("请实现RK4方法")
+    k1 = dt * ode_func(state, t, **kwargs)
+    k2 = dt * ode_func(state + k1/2, t + dt/2, **kwargs)
+    k3 = dt * ode_func(state + k2/2, t + dt/2, **kwargs)
+    k4 = dt * ode_func(state + k3, t + dt, **kwargs)
+    
+    new_state = state + (k1 + 2*k2 + 2*k3 + k4) / 6
+    return new_state
+
 
 def solve_ode(ode_func: Callable, initial_state: np.ndarray, t_span: Tuple[float, float], 
               dt: float, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
@@ -54,7 +64,16 @@ def solve_ode(ode_func: Callable, initial_state: np.ndarray, t_span: Tuple[float
         Tuple[np.ndarray, np.ndarray]: (时间点数组, 状态数组)
     """
     # TODO: 实现ODE求解器
-    raise NotImplementedError("请实现ODE求解器")
+    t_start, t_end = t_span
+    num_steps = int((t_end - t_start) / dt) + 1
+    t_arr = np.linspace(t_start, t_end, num_steps)
+    states = np.zeros((num_steps, len(initial_state)))
+    states[0] = initial_state
+    
+    for i in range(1, num_steps):
+        states[i] = rk4_step(ode_func, states[i-1], t_arr[i-1], dt, **kwargs)
+    
+    return t_arr, states
 
 def plot_time_evolution(t: np.ndarray, states: np.ndarray, title: str) -> None:
     """
@@ -66,7 +85,16 @@ def plot_time_evolution(t: np.ndarray, states: np.ndarray, title: str) -> None:
         title: str, 图标题
     """
     # TODO: 实现时间演化图的绘制
-    raise NotImplementedError("请实现时间演化图的绘制")
+    plt.figure(figsize=(10, 6))
+    plt.plot(t, states[:, 0], 'b-', label='位置 x')
+    plt.plot(t, states[:, 1], 'r-', label='速度 v')
+    plt.xlabel('时间 t')
+    plt.ylabel('状态')
+    plt.title(title)
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 def plot_phase_space(states: np.ndarray, title: str) -> None:
     """
@@ -77,7 +105,18 @@ def plot_phase_space(states: np.ndarray, title: str) -> None:
         title: str, 图标题
     """
     # TODO: 实现相空间图的绘制
-    raise NotImplementedError("请实现相空间图的绘制")
+    plt.figure(figsize=(8, 8))
+    plt.plot(states[:, 0], states[:, 1], 'b-', linewidth=1.5)
+    plt.scatter(states[0, 0], states[0, 1], c='r', marker='o', s=100, label='起点')
+    plt.scatter(states[-1, 0], states[-1, 1], c='g', marker='s', s=100, label='终点')
+    plt.xlabel('位置 x')
+    plt.ylabel('速度 v')
+    plt.title(title)
+    plt.grid(True)
+    plt.legend()
+    plt.axis('equal')
+    plt.tight_layout()
+    plt.show()
 
 def calculate_energy(state: np.ndarray, omega: float = 1.0) -> float:
     """
@@ -92,7 +131,8 @@ def calculate_energy(state: np.ndarray, omega: float = 1.0) -> float:
     """
     # TODO: 实现能量计算
     # E = (1/2)v^2 + (1/2)omega^2*x^2
-    raise NotImplementedError("请实现能量计算")
+    x, v = state
+    return 0.5 * v**2 + 0.5 * omega**2 * x**2
 
 def analyze_limit_cycle(states: np.ndarray) -> Tuple[float, float]:
     """
@@ -105,7 +145,24 @@ def analyze_limit_cycle(states: np.ndarray) -> Tuple[float, float]:
         Tuple[float, float]: (振幅, 周期)
     """
     # TODO: 实现极限环分析
-    raise NotImplementedError("请实现极限环分析")
+    # 取最后1/3的数据进行分析（稳态部分）
+    n = len(states)
+    start_idx = n * 2 // 3
+    x_vals = states[start_idx:, 0]
+    
+    # 计算振幅（取最大值作为振幅）
+    amplitude = np.max(np.abs(x_vals))
+    
+    # 计算周期：通过寻找过零点
+    zero_crossings = np.where(np.diff(np.sign(x_vals)))[0]
+    if len(zero_crossings) < 2:
+        return amplitude, np.nan
+    
+    # 计算相邻过零点之间的时间间隔（取平均作为周期）
+    periods = np.diff(zero_crossings)
+    period = np.mean(periods) * 0.01 * 2  # 乘以时间步长和2（因为相邻过零是半个周期）
+    
+    return amplitude, period
 
 def main():
     # 设置基本参数
